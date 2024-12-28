@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:vibration/vibration.dart';
 
 import '../appConfig.dart';
 import '../service/main.dart';
@@ -30,16 +29,6 @@ class ServiceChannal {
     if (mainInfo == "backup" || mainInfo == "done") {
       Navigator.of(context).pop();
     }
-    // 去扫二维码
-    else if (mainInfo == "scannerQR") {
-      String? res = await Scanner.doQRAction(context);
-      Utils.runChannelJs(globalWebViewController, "scannerCallback('$res')");
-    }
-    // 去扫条形码
-    else if (mainInfo == "scannerBarcode") {
-      String? res = await Scanner.doBarcodeAction(context);
-      Utils.runChannelJs(globalWebViewController, "scannerCallback('$res')");
-    }
     // 混合扫码
     else if (mainInfo == "scanner") {
       String? res = await Scanner.doAction(context);
@@ -55,18 +44,6 @@ class ServiceChannal {
     // 去往服务器 IP 设置界面
     else if (mainInfo == "ipConfig") {
       appPageKey.currentState?.ipConfig();
-    }
-    // 检查网络连接
-    else if (mainInfo == "connectivityCheck") {
-      bool res = await NetworkInfo.check();
-      Utils.runChannelJs(
-          globalWebViewController, "connectivityCheckCallback($res)");
-    }
-    // 检查网络连接类型
-    else if (mainInfo == "checkNetworkType") {
-      String res = await NetworkInfo.checkType();
-      Utils.runChannelJs(
-          globalWebViewController, "checkNetworkTypeCallback('$res')");
     }
     // 获取当前设备的 safeHeight [top, bottom]
     else if (mainInfo == "getSafeHeight") {
@@ -145,10 +122,6 @@ class ServiceChannal {
       else if (fnKey == "modalProgressSet") {
         ModalProgress.setstep(double.parse(infoArr[1]));
       }
-      // app 更新
-      else if (fnKey == "appUpdate") {
-        AppUpdater.updateApp(context, infoArr[1], "fmct.apk");
-      }
       // 拨打电话
       else if (fnKey == "phonecall") {
         PhoneCall.dial(context, infoArr[1]);
@@ -170,26 +143,6 @@ class ServiceChannal {
         String? result = await LocalStorage.getValue(infoArr[1]);
         Utils.runChannelJs(
             globalWebViewController, "readLocalCallback('$result')");
-      }
-      // 震动
-      else if (mainInfo == 'vibrate') {
-        bool? hasVibrator = await Vibration.hasVibrator();
-        // 有震荡器
-        if (hasVibrator != null && hasVibrator) {
-          bool? hasAmplitudeControl = await Vibration.hasAmplitudeControl();
-          // 有震幅控制器
-          if (hasAmplitudeControl != null && hasAmplitudeControl) {
-            String? result = await LocalStorage.getValue(infoArr[1]);
-            if (result != null) {
-              int amplitude = int.parse(result);
-              Vibration.vibrate(amplitude: amplitude);
-            } else {
-              Vibration.vibrate();
-            }
-          } else {
-            Vibration.vibrate();
-          }
-        }
       }
     }
   }

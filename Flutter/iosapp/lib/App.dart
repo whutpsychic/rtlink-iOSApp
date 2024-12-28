@@ -1,13 +1,6 @@
 // ignore_for_file: file_names, use_build_context_synchronously
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-// Import for Android features.
-import 'package:webview_flutter_android/webview_flutter_android.dart';
-// Import for iOS features.
-import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
-import 'package:shake/shake.dart';
-import 'package:connectivity_wrapper/connectivity_wrapper.dart';
-import './UIcomponents/NoNetwork.dart';
 
 import 'appConfig.dart';
 import './utils/main.dart';
@@ -20,7 +13,7 @@ import './pages/CameraTakingPhoto.dart';
 late final WebViewController globalWebViewController;
 
 class App extends StatefulWidget {
-  const App({Key? key}) : super(key: key);
+  const App({super.key});
 
   @override
   State<App> createState() => AppState();
@@ -33,15 +26,8 @@ class AppState extends State<App> {
     final ServiceChannal serviceChannal = ServiceChannal(context);
 
     // #docregion platform_features
-    late final PlatformWebViewControllerCreationParams params;
-    if (WebViewPlatform.instance is WebKitWebViewPlatform) {
-      params = WebKitWebViewControllerCreationParams(
-        allowsInlineMediaPlayback: true,
-        mediaTypesRequiringUserAction: const <PlaybackMediaTypes>{},
-      );
-    } else {
-      params = const PlatformWebViewControllerCreationParams();
-    }
+    late final PlatformWebViewControllerCreationParams params =
+        const PlatformWebViewControllerCreationParams();
 
     final WebViewController controller =
         WebViewController.fromPlatformCreationParams(params);
@@ -53,48 +39,19 @@ class AppState extends State<App> {
       // ..setBackgroundColor(const Color(0x00000000))
       ..setNavigationDelegate(
         NavigationDelegate(
-          onProgress: (int progress) {
-            if (Configure.debugging) {
-              debugPrint('WebView is loading (progress : $progress%)');
-            }
-          },
-          onPageStarted: (String url) {
-            if (Configure.debugging) {
-              debugPrint('Page started loading: $url');
-            }
-          },
-          onPageFinished: (String url) {
-            if (Configure.debugging) {
-              debugPrint('Page finished loading: $url');
-            }
-          },
-          onWebResourceError: (WebResourceError error) {
-            if (Configure.debugging) {
-              debugPrint('''
-Page resource error:
-  code: ${error.errorCode}
-  description: ${error.description}
-  errorType: ${error.errorType}
-  isForMainFrame: ${error.isForMainFrame}
-          ''');
-            }
-          },
+          onProgress: (int progress) {},
+          onPageStarted: (String url) {},
+          onPageFinished: (String url) {},
+          onWebResourceError: (WebResourceError error) {},
           onNavigationRequest: (NavigationRequest request) {
             // 禁止去往youtube
             if (request.url.startsWith('https://www.youtube.com/')) {
               debugPrint('blocking navigation to ${request.url}');
               return NavigationDecision.prevent;
             }
-            if (Configure.debugging) {
-              debugPrint('allowing navigation to ${request.url}');
-            }
             return NavigationDecision.navigate;
           },
-          onUrlChange: (UrlChange change) {
-            if (Configure.debugging) {
-              debugPrint('url change to ${change.url}');
-            }
-          },
+          onUrlChange: (UrlChange change) {},
         ),
       )
       // 插入预留通道
@@ -105,11 +62,6 @@ Page resource error:
       ..loadRequest(Uri.parse(_appUrl));
 
     // #docregion platform_features
-    if (controller.platform is AndroidWebViewController) {
-      AndroidWebViewController.enableDebugging(true);
-      (controller.platform as AndroidWebViewController)
-          .setMediaPlaybackRequiresUserGesture(false);
-    }
     // #enddocregion platform_features
     globalWebViewController = controller;
   }
@@ -117,23 +69,7 @@ Page resource error:
   @override
   void initState() {
     super.initState();
-    if (Configure.debugging) {
-      // 监听摇一摇事件
-      ShakeDetector.autoStart(
-        onPhoneShake: () async {
-          // Do stuff on phone shake
-          String? result = await ModalConfirm.show(
-              context, "您想要重新配置ip地址吗？", "通过配置 ip 来决定您将要访问的app地址");
-          if (result == "true") {
-            ipConfig();
-          }
-        },
-        minimumShakeCount: 1,
-        shakeSlopTimeMS: 500,
-        shakeCountResetTime: 3000,
-        shakeThresholdGravity: 2.7,
-      );
-    }
+
     AppConfig.getH5url().then((res) {
       setState(() {
         _appUrl = res;
@@ -183,30 +119,27 @@ Page resource error:
               body: SafeArea(
                 top: false,
                 bottom: false,
-                child: ConnectivityWidgetWrapper(
-                  disableInteraction: false,
-                  offlineWidget: const NoNetwork(),
-                  child: WebViewWidget(
-                    controller: globalWebViewController,
-                    // initialUrl: _appUrl,
-                    // javascriptMode: JavascriptMode.unrestricted,
-                    // javascriptChannels: <JavascriptChannel>{
-                    //   // 服务通道
-                    //   serviceChannel(context),
-                    //   // 权限通道
-                    //   permissionChannel(context),
-                    //   // 安卓原生服务通道
-                    //   setAndroidChannel(context),
-                    // },
-                    // onWebViewCreated:
-                    //     (WebViewController webViewController) async {
-                    //   // final String appUrl = await AppConfig.getH5url();
-                    //   globalWebViewController = webViewController;
-                    //   webViewController.loadUrl(_appUrl);
-                    //   webViewController.clearCache();
-                    // },
-                    // zoomEnabled: false,
-                  ),
+                child: WebViewWidget(
+                  controller: globalWebViewController,
+
+                  // initialUrl: _appUrl,
+                  // javascriptMode: JavascriptMode.unrestricted,
+                  // javascriptChannels: <JavascriptChannel>{
+                  //   // 服务通道
+                  //   serviceChannel(context),
+                  //   // 权限通道
+                  //   permissionChannel(context),
+                  //   // 安卓原生服务通道
+                  //   setAndroidChannel(context),
+                  // },
+                  // onWebViewCreated:
+                  //     (WebViewController webViewController) async {
+                  //   // final String appUrl = await AppConfig.getH5url();
+                  //   globalWebViewController = webViewController;
+                  //   webViewController.loadUrl(_appUrl);
+                  //   webViewController.clearCache();
+                  // },
+                  // zoomEnabled: false,
                 ),
               ),
             ),

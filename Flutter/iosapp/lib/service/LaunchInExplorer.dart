@@ -9,6 +9,7 @@ class LaunchInExplorer {
     if (!await launchUrl(url,
         mode:
             inner ? LaunchMode.inAppWebView : LaunchMode.externalApplication)) {
+      // ignore: use_build_context_synchronously
       Toast.show(context, "打开失败!");
     }
   }

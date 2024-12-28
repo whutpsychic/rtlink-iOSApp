@@ -1,7 +1,6 @@
 // ignore_for_file: file_names
 // ================ 控制阀文件 ================
 // ==========================================
-
 import './service/LocalStorage.dart';
 
 enum AppMode { prodution, dev }
@@ -44,7 +43,7 @@ class AppConfig {
 // 静态配置存储区
 class StaticConfig {
   // h5 调试时的本地运行地址
-  static const String devH5url = "http://192.168.1.71:8082/";
+  static const String devH5url = "http://192.168.1.71:8088/";
   // h5 产品运行时的地址
   static const String productionH5url =
       "http://whutpsychic.gitee.io/flutter-core";

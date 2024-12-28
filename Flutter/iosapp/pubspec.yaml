@@ -33,9 +33,7 @@ dependencies:
 
   # ======= 高信赖度官方/主流大三方模块 =======
   # 浏览器组件
-  webview_flutter: ^4.4.4
-  webview_flutter_android: ^3.13.2
-  webview_flutter_wkwebview: ^3.10.1
+  webview_flutter: ^4.10.0
   # 权限请求模块
   permission_handler: ^11.1.0
   # 网络请求模块

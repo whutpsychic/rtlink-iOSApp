@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 
 class ScannerView extends StatefulWidget {
-  const ScannerView({Key? key}) : super(key: key);
+  const ScannerView({super.key});
 
   @override
   State<StatefulWidget> createState() => _ScannerViewState();
