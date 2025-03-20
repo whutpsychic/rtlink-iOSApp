@@ -1,14 +1,14 @@
 //
-//  iosappTests.swift
-//  iosappTests
+//  iOSappTests.swift
+//  iOSappTests
 //
-//  Created by 瑞太智联 on 2024/12/9.
+//  Created by 瑞太智联 on 2025/3/19.
 //
 
 import Testing
-@testable import iosapp
+@testable import iOSapp
 
-struct iosappTests {
+struct iOSappTests {
 
     @Test func example() async throws {
         // Write your test here and use APIs like `#expect(...)` to check expected conditions.

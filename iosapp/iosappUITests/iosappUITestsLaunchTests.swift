@@ -1,13 +1,13 @@
 //
-//  iosappUITestsLaunchTests.swift
-//  iosappUITests
+//  iOSappUITestsLaunchTests.swift
+//  iOSappUITests
 //
-//  Created by 瑞太智联 on 2024/12/9.
+//  Created by 瑞太智联 on 2025/3/19.
 //
 
 import XCTest
 
-final class iosappUITestsLaunchTests: XCTestCase {
+final class iOSappUITestsLaunchTests: XCTestCase {
 
     override class var runsForEachTargetApplicationUIConfiguration: Bool {
         true

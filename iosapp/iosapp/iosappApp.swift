@@ -1,17 +1,17 @@
 //
-//  iosappApp.swift
-//  iosapp
+//  iOSappApp.swift
+//  iOSapp
 //
-//  Created by 瑞太智联 on 2024/12/9.
+//  Created by 瑞太智联 on 2025/3/19.
 //
 
 import SwiftUI
 
 @main
-struct iosappApp: App {
+struct iOSappApp: App {
     var body: some Scene {
         WindowGroup {
-            ListView()
+            EntryView()
         }
     }
 }
