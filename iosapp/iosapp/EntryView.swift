@@ -8,41 +8,58 @@
 import SwiftUI
 
 struct EntryView: View {
-    
-    @ObservedObject var vm = BaseWebViewVM(webResource: "http://192.168.0.2:8082/mobile")
-    
-    
+
+    @ObservedObject var vm = BaseWebViewVM(webResource: WEB_URL)
+    @State var message: String = ""
+
     var body: some View {
         VStack {
             SwiftUIWebView(viewModel: vm)
                 .onAppear(perform: vm.loadWebPage)
-                .alert(vm.panelTitle,
-                       isPresented: $vm.showPanel,
-                       actions: {
-                    switch vm.panelType {
-                    case .alert:
-                        Button("Close") {
-                            vm.alertCompletionHandler()
+                .alert(
+                    vm.panelTitle,
+                    isPresented: $vm.showPanel,
+                    actions: {
+                        switch vm.panelType {
+                        case .alert:
+                            Button("好") {
+                                vm.webView.evaluateJavaScript(
+                                    doCallbackFnToWeb(
+                                        jsStr: "modalTipsCallback(true)"))
+                                vm.alertCompletionHandler()
+                            }
+                        case .confirm:
+                            Button("确认") {
+
+                            }
+                            Button("取消") {
+
+                            }
+                        default:
+                            Button("Close") {}
                         }
-                    default:
-                        Button("Close") {}
-                    }
-                }, message: {
-                    Text(vm.panelMessage)
-                })
+                    },
+                    message: {
+                        Text(vm.panelMessage)
+                    })
+
         }
     }
-    
-    private func mounted(){
-        
+
+    // 初始化函数
+    init() {
+        self.mounted()
+    }
+
+    private func mounted() {
+
         // xxs
         // 2s 后执行
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-            //            print("This code runs after a 2-second delay on the main thread.")
-            
-            
+            // print("This code runs after a 2-second delay on the main thread.")
+
         }
-        
+
     }
 }
 
