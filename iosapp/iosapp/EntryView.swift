@@ -11,6 +11,7 @@ struct EntryView: View {
 
     @ObservedObject var vm = BaseWebViewVM(webResource: WEB_URL)
     @State var message: String = ""
+    
 
     var body: some View {
         VStack {
@@ -30,10 +31,16 @@ struct EntryView: View {
                             }
                         case .confirm:
                             Button("确认") {
-
+                                vm.webView.evaluateJavaScript(
+                                    doCallbackFnToWeb(
+                                        jsStr: "modalConfirmCallback(true)"))
+                                vm.alertCompletionHandler()
                             }
                             Button("取消") {
-
+                                vm.webView.evaluateJavaScript(
+                                    doCallbackFnToWeb(
+                                        jsStr: "modalConfirmCallback(false)"))
+                                vm.alertCompletionHandler()
                             }
                         default:
                             Button("Close") {}

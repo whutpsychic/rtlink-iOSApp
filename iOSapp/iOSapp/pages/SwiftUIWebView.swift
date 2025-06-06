@@ -47,7 +47,11 @@ struct SwiftUIWebView: UIViewRepresentable {
         userContentController.add(
             context.coordinator as WKScriptMessageHandler, name: "fromWebPage")
 
+        // ------------- 定义函数通道名 -------------
         self.regeisterPanelName(context: context, name: "modalTips")
+        self.regeisterPanelName(context: context, name: "modalConfirm")
+        self.regeisterPanelName(context: context, name: "writeLocal")
+        self.regeisterPanelName(context: context, name: "readLocal")
 
         // 替h5端运行一些绑定代码
         injectJS(userContentController)
@@ -213,10 +217,10 @@ class BaseWebViewVM: ObservableObject {
          * - WebViewErrors.GenericError
          * - WebViewErrors.ErrorWithValue(value: 99)
          */
-        // 判断传输关键字名
+        // ---------------------- 判断传输关键字名 ----------------------
+        // 警告
         if fromHandler == "modalTips" {
             let messageStr = String(describing: message)
-
             let argArr: Array = messageStr.split(separator: KEY_VALUE_SPLITER)
 
             let title = String(describing: argArr[0])
@@ -225,8 +229,60 @@ class BaseWebViewVM: ObservableObject {
             self.displayPanel(
                 type: JSPanelType.alert, title: title, content: content
             )
-
         }
+        // 确认
+        if fromHandler == "modalConfirm" {
+            let messageStr = String(describing: message)
+            let argArr: Array = messageStr.split(separator: KEY_VALUE_SPLITER)
+
+            let title = String(describing: argArr[0])
+            let content = String(describing: argArr[1])
+            
+            self.displayPanel(
+                type: JSPanelType.confirm, title: title, content: content
+            )
+        }
+        // 写入本地存储
+        if fromHandler == "writeLocal" {
+            let messageStr = String(describing: message)
+            let argArr: Array = messageStr.split(separator: KEY_VALUE_SPLITER)
+
+            let key = String(describing: argArr[0])
+            let content = String(describing: argArr[1])
+            
+            
+            // 写入缓存 (有效期7天)
+            let profile = KVData(key: key, value: content)
+            let expiry = Calendar.current.date(byAdding: .day, value: 30, to: Date())
+            LocalStorage.shared.save(profile, forKey: "\(key)_profile", expiry: expiry)
+            
+            self.webView.evaluateJavaScript(
+                doCallbackFnToWeb(
+                    jsStr: "writeLocalCallback(true)"))
+        }
+        // 读取本地存储
+        if fromHandler == "readLocal" {
+            let messageStr = String(describing: message)
+            let argArr: Array = messageStr.split(separator: KEY_VALUE_SPLITER)
+
+            let key = String(describing: argArr[0])
+           
+            // 读取缓存
+            if let cached = LocalStorage.shared.load(forKey: "\(key)_profile", type: KVData.self) {
+//                print("读取缓存: \(cached.value)")
+                self.webView.evaluateJavaScript(
+                    doCallbackFnToWeb(
+                        jsStr: "readLocalCallback('\(cached.value)')"))
+            }
+            else{
+                self.webView.evaluateJavaScript(
+                    doCallbackFnToWeb(
+                        jsStr: "readLocalCallback(undefined)"))
+            }
+            
+            
+        }
+        
 
         return returnValue
     }
