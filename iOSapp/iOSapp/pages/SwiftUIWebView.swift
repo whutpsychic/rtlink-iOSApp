@@ -5,29 +5,29 @@ import SwiftUI
 // WKWebView is a UIView. It must be represented by a structure that implements UIViewRepresentable.
 struct SwiftUIWebView: UIViewRepresentable {
     typealias UIViewType = WKWebView
-
+    
     // 存储vm初始量
     var vm: BaseWebViewVM
-
+    
     // SwiftUIWebView must initialize with an instance of BaseWebViewVM.
     // Initialize with a view-model
     init(viewModel: BaseWebViewVM) {
         self.vm = viewModel
     }
-
+    
     // ------------------------ 工具函数 ------------------------
     // 注册方法名通道
     func regeisterPanelName(context: Context, name: String) {
         let userContentController = vm.webView
             .configuration
             .userContentController
-
+        
         userContentController.addScriptMessageHandler(
             context.coordinator as WKScriptMessageHandlerWithReply,
             contentWorld: WKContentWorld.page,
             name: name)
     }
-
+    
     // The makeUIView method returns an instance of WKWebView from the view model.
     // web mounted 之后调用此函数
     func makeUIView(context: Context) -> WKWebView {
@@ -35,30 +35,33 @@ struct SwiftUIWebView: UIViewRepresentable {
         // coordinator to the web view uiDelegate property.
         // Handle alert
         vm.webView.uiDelegate = context.coordinator
-
+        
         let userContentController = vm.webView
             .configuration
             .userContentController
-
+        
         // Clear all message handlers, if any
         userContentController.removeAllScriptMessageHandlers()
-
+        
         // Message handler without reply
         userContentController.add(
             context.coordinator as WKScriptMessageHandler, name: "fromWebPage")
-
+        
         // ------------- 定义函数通道名 -------------
         self.regeisterPanelName(context: context, name: "modalTips")
         self.regeisterPanelName(context: context, name: "modalConfirm")
         self.regeisterPanelName(context: context, name: "writeLocal")
         self.regeisterPanelName(context: context, name: "readLocal")
-
+        self.regeisterPanelName(context: context, name: "preDial")
+        self.regeisterPanelName(context: context, name: "checkNetworkType")
+        self.regeisterPanelName(context: context, name: "getDeviceInfo")
+        
         // 替h5端运行一些绑定代码
         injectJS(userContentController)
-
+        
         return vm.webView
     }
-
+    
     // ----------------------- 工具函数 -----------------------
     // 替 web 端注册监听原生端事件的函数
     // web onloaded
@@ -79,7 +82,7 @@ struct SwiftUIWebView: UIViewRepresentable {
             }
             window.RTMB.platform = 'ios'
             """
-
+        
         // Inject js code
         userContentController.addUserScript(
             WKUserScript(
@@ -87,10 +90,10 @@ struct SwiftUIWebView: UIViewRepresentable {
                 injectionTime: .atDocumentEnd,
                 forMainFrameOnly: true))
     }
-
+    
     func updateUIView(_ uiView: WKWebView, context: Context) {
     }
-
+    
     // The makeCoordinator method returns an instance of Coordinator.
     // The Coordinator contains delegate functions for the WKWebView.
     // For the time being, it doesn’t do anything special.
@@ -105,11 +108,11 @@ struct SwiftUIWebView: UIViewRepresentable {
 // Instead, it passes the alert message and a callback function to the view model.
 extension SwiftUIWebView {
     class Coordinator: NSObject, WKUIDelegate, WKScriptMessageHandler,
-        WKScriptMessageHandlerWithReply
+                       WKScriptMessageHandlerWithReply
     {
-
+        
         // MARK: - WKScriptMessageHandler delegate function
-
+        
         // For send-receive messaging
         func userContentController(
             _ userContentController: WKUserContentController,
@@ -119,9 +122,9 @@ extension SwiftUIWebView {
                 fromHandler: message.name,
                 message: message.body)
         }
-
+        
         // MARK: - WKScriptMessageHandlerWithReply delegate function
-
+        
         // For send-receive-reply messaging
         func userContentController(
             _ userContentController: WKUserContentController,
@@ -132,7 +135,7 @@ extension SwiftUIWebView {
                 let returnValue = try self.viewModel.messageFromWithReply(
                     fromHandler: message.name,
                     message: message.body)
-
+                
                 replyHandler(returnValue, nil)
             } catch WebViewErrors.GenericError {
                 replyHandler(nil, "A generic error")
@@ -142,13 +145,13 @@ extension SwiftUIWebView {
                 replyHandler(nil, error.localizedDescription)
             }
         }
-
+        
         var viewModel: BaseWebViewVM
-
+        
         init(viewModel: BaseWebViewVM) {
             self.viewModel = viewModel
         }
-
+        
         // webView function handles Javascipt alert
         func webView(
             _ webView: WKWebView,
@@ -160,7 +163,7 @@ extension SwiftUIWebView {
                 message: message,
                 alertCompletionHandler: completionHandler)
         }
-
+        
     }
 }
 
@@ -174,7 +177,7 @@ enum WebViewErrors: Error {
 enum JSPanelType {
     case alert
     case confirm
-
+    
     var title: String {
         switch self {
         case .alert:
@@ -187,13 +190,13 @@ enum JSPanelType {
 
 // 定义初始化时的参数对象类
 class BaseWebViewVM: ObservableObject {
-
+    
     // BaseWebViewVM has a published property webResource.
     // This property can be initialized through the class constructor (init method).
     // It can also be populated through a user interface.
     // 浏览器指向地址
     @Published var webResource: String?
-
+    
     // MARK: - Functions for messaging
     func messageFrom(fromHandler: String, message: Any) {
         self.panelTitle = JSPanelType.alert.title  // "Alert"
@@ -201,16 +204,16 @@ class BaseWebViewVM: ObservableObject {
         self.alertCompletionHandler = {}
         self.panelType = .alert
         self.showPanel = true
-
+        
     }
-
+    
     // 定义返回web的处理函数
     func messageFromWithReply(fromHandler: String, message: Any) throws
-        -> String
+    -> String
     {
         // 返回结果
         let returnValue: String = ""
-
+        
         /*
          * This function can throw the follow exceptions:
          *
@@ -222,7 +225,7 @@ class BaseWebViewVM: ObservableObject {
         if fromHandler == "modalTips" {
             let messageStr = String(describing: message)
             let argArr: Array = messageStr.split(separator: KEY_VALUE_SPLITER)
-
+            
             let title = String(describing: argArr[0])
             let content = String(describing: argArr[1])
             
@@ -234,7 +237,7 @@ class BaseWebViewVM: ObservableObject {
         if fromHandler == "modalConfirm" {
             let messageStr = String(describing: message)
             let argArr: Array = messageStr.split(separator: KEY_VALUE_SPLITER)
-
+            
             let title = String(describing: argArr[0])
             let content = String(describing: argArr[1])
             
@@ -246,10 +249,9 @@ class BaseWebViewVM: ObservableObject {
         if fromHandler == "writeLocal" {
             let messageStr = String(describing: message)
             let argArr: Array = messageStr.split(separator: KEY_VALUE_SPLITER)
-
+            
             let key = String(describing: argArr[0])
             let content = String(describing: argArr[1])
-            
             
             // 写入缓存 (有效期7天)
             let profile = KVData(key: key, value: content)
@@ -264,12 +266,11 @@ class BaseWebViewVM: ObservableObject {
         if fromHandler == "readLocal" {
             let messageStr = String(describing: message)
             let argArr: Array = messageStr.split(separator: KEY_VALUE_SPLITER)
-
+            
             let key = String(describing: argArr[0])
-           
+            
             // 读取缓存
             if let cached = LocalStorage.shared.load(forKey: "\(key)_profile", type: KVData.self) {
-//                print("读取缓存: \(cached.value)")
                 self.webView.evaluateJavaScript(
                     doCallbackFnToWeb(
                         jsStr: "readLocalCallback('\(cached.value)')"))
@@ -279,41 +280,62 @@ class BaseWebViewVM: ObservableObject {
                     doCallbackFnToWeb(
                         jsStr: "readLocalCallback(undefined)"))
             }
+        }
+        // 拨打号码
+        if fromHandler == "preDial" {
+            let messageStr = String(describing: message)
+            let argArr: Array = messageStr.split(separator: KEY_VALUE_SPLITER)
             
+            let key = String(describing: argArr[0])
             
+            DeviceFn.dialNumber(number:key);
+        }
+        // 获取网络连接状态
+        if fromHandler == "checkNetworkType" {
+            DeviceFn.getType(webview: self.webView);
+        }
+        // 获取设备信息
+        if fromHandler == "getDeviceInfo" {
+            let str =  DeviceFn.getDeviceInfo();
+            
+            self.webView.evaluateJavaScript(
+                doCallbackFnToWeb(
+                    jsStr: "getDeviceInfoCallback(\(str))"))
         }
         
-
+        
+        
+        
         return returnValue
     }
-
-//    // 定义主动给web发信息的函数
-//    func messageToWeb(key: String, message: String) {
-//        let escapedMessage = message.replacingOccurrences(
-//            of: "\"", with: "\\\"")
-//        let js =
-//            "window.postMessage(\"\(key)\(KEY_VALUE_SPLITER)\(escapedMessage)\", \"*\")"
-//        //        let js = "window['Android'].modalTips = alert"
-//        self.webView.evaluateJavaScript(js) { (result, error) in
-//            if let error = error {
-//                print("Error: \(error.localizedDescription)")
-//            }
-//        }
-//    }
-
+    
+    //    // 定义主动给web发信息的函数
+    //    func messageToWeb(key: String, message: String) {
+    //        let escapedMessage = message.replacingOccurrences(
+    //            of: "\"", with: "\\\"")
+    //        let js =
+    //            "window.postMessage(\"\(key)\(KEY_VALUE_SPLITER)\(escapedMessage)\", \"*\")"
+    //        //        let js = "window['Android'].modalTips = alert"
+    //        self.webView.evaluateJavaScript(js) { (result, error) in
+    //            if let error = error {
+    //                print("Error: \(error.localizedDescription)")
+    //            }
+    //        }
+    //    }
+    
     var webView: WKWebView
-
+    
     // The constructor creates an instance of WKWebView but without loading the target webResource.
     init(webResource: String? = nil) {
         self.webResource = webResource
-
+        
         self.webView = WKWebView(
             frame: .zero, configuration: WKWebViewConfiguration())
-
+        
         // Inspectabl web view
         self.webView.isInspectable = true
     }
-
+    
     // For the time being, the loadWebPage method will load an internet web resource.
     // Later on, we will see how to handle local web content.
     // 初始化渲染web函数
@@ -323,30 +345,30 @@ class BaseWebViewVM: ObservableObject {
                 print("Bad URL")
                 return
             }
-
+            
             let request = URLRequest(url: url)
             webView.load(request)
         }
     }
-
+    
     // =============================== 集成alert函数 ===============================
     // MARK: - Properties for Javascript alert, confirm, and prompt dialog boxes
     @Published var showPanel: Bool = false
     var panelTitle: String = ""
     var panelMessage: String = ""
-
+    
     var panelType: JSPanelType? = nil
-
+    
     // Alert properties
     var alertCompletionHandler: () -> Void = {}
-
+    
     func displayPanel(type: JSPanelType, title: String, content: String) {
         self.panelType = type
         self.panelTitle = title
         self.panelMessage = content
         self.showPanel = true
     }
-
+    
     // Set the properties for the corresponding alert UI
     // 监听web内置的alert函数
     func webPanel(
