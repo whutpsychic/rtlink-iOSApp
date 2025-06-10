@@ -55,7 +55,10 @@ struct SwiftUIWebView: UIViewRepresentable {
         self.regeisterPanelName(context: context, name: "preDial")
         self.regeisterPanelName(context: context, name: "checkNetworkType")
         self.regeisterPanelName(context: context, name: "getDeviceInfo")
-        
+        self.regeisterPanelName(context: context, name: "getSafeHeights")
+        self.regeisterPanelName(context: context, name: "setScreenHorizontal")
+        self.regeisterPanelName(context: context, name: "setScreenPortrait")
+
         // 替h5端运行一些绑定代码
         injectJS(userContentController)
         
@@ -118,9 +121,9 @@ extension SwiftUIWebView {
             _ userContentController: WKUserContentController,
             didReceive message: WKScriptMessage
         ) {
-            self.viewModel.messageFrom(
-                fromHandler: message.name,
-                message: message.body)
+//            self.viewModel.messageFrom(
+//                fromHandler: message.name,
+//                message: message.body)
         }
         
         // MARK: - WKScriptMessageHandlerWithReply delegate function
@@ -159,9 +162,9 @@ extension SwiftUIWebView {
             initiatedByFrame frame: WKFrameInfo,
             completionHandler: @escaping () -> Void
         ) {
-            viewModel.webPanel(
-                message: message,
-                alertCompletionHandler: completionHandler)
+//            viewModel.webPanel(
+//                message: message,
+//                alertCompletionHandler: completionHandler)
         }
         
     }
@@ -198,14 +201,14 @@ class BaseWebViewVM: ObservableObject {
     @Published var webResource: String?
     
     // MARK: - Functions for messaging
-    func messageFrom(fromHandler: String, message: Any) {
-        self.panelTitle = JSPanelType.alert.title  // "Alert"
-        self.panelMessage = String(describing: message)
-        self.alertCompletionHandler = {}
-        self.panelType = .alert
-        self.showPanel = true
-        
-    }
+//    func messageFrom(fromHandler: String, message: Any) {
+//        self.panelTitle = JSPanelType.alert.title  // "Alert"
+//        self.panelMessage = String(describing: message)
+//        self.alertCompletionHandler = {}
+//        self.panelType = .alert
+//        self.showPanel = true
+//        
+//    }
     
     // 定义返回web的处理函数
     func messageFromWithReply(fromHandler: String, message: Any) throws
@@ -302,8 +305,18 @@ class BaseWebViewVM: ObservableObject {
                 doCallbackFnToWeb(
                     jsStr: "getDeviceInfoCallback(\(str))"))
         }
-        
-        
+        // 获取安全高度
+        if fromHandler == "getSafeHeights" {
+            DeviceFn.getSafeHeights(webview: self.webView);
+        }
+        // 强制横屏
+        if fromHandler == "setScreenHorizontal" {
+            DeviceFn.setScreenHorizontal();
+        }
+        // 强制竖屏
+        if fromHandler == "setScreenPortrait" {
+            DeviceFn.setScreenPortrait();
+        }
         
         
         return returnValue
@@ -370,7 +383,7 @@ class BaseWebViewVM: ObservableObject {
     }
     
     // Set the properties for the corresponding alert UI
-    // 监听web内置的alert函数
+    // 监听web内置的alert函数（废）
     func webPanel(
         message: String,
         alertCompletionHandler completionHandler: @escaping () -> Void

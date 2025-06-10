@@ -6,6 +6,7 @@
 //
 
 import Network
+import UIKit
 @preconcurrency import WebKit
 
 class DeviceFn {
@@ -19,6 +20,59 @@ class DeviceFn {
         }
         
         UIApplication.shared.open(url, options: [:], completionHandler: nil)
+    }
+    
+    // ------------------------- 安全高度 -------------------------
+    static func getSafeHeights(webview: WKWebView) {
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let window = windowScene.windows.first {
+            let topSafeAreaHeight = window.safeAreaInsets.top
+            let bottomSafeAreaHeight = window.safeAreaInsets.bottom
+            
+            webview.evaluateJavaScript(
+                doCallbackFnToWeb(
+                    jsStr: "getSafeHeightsCallback([\(topSafeAreaHeight), \(bottomSafeAreaHeight)])"))
+        }
+    }
+    
+    static func forceOrientation(_ orientation: UIInterfaceOrientation) {
+        // iOS 16+
+        if #available(iOS 16.0, *) {
+            guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene else { return }
+            
+            let mask: UIInterfaceOrientationMask
+            switch orientation {
+            case .portrait: mask = .portrait
+            case .landscapeLeft: mask = .landscapeLeft
+            case .landscapeRight: mask = .landscapeRight
+            case .portraitUpsideDown: mask = .portraitUpsideDown
+            default: mask = .portrait
+            }
+            
+            windowScene.requestGeometryUpdate(.iOS(interfaceOrientations: mask))
+        }
+        // iOS 15及以下
+        else {
+            // 先尝试标准方法
+            UIDevice.current.setValue(orientation.rawValue, forKey: "orientation")
+            UIViewController.attemptRotationToDeviceOrientation()
+            
+            // 如果无效，延迟再试一次（模拟器有时需要）
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                UIDevice.current.setValue(orientation.rawValue, forKey: "orientation")
+                UIViewController.attemptRotationToDeviceOrientation()
+            }
+        }
+    }
+    
+    // ------------------------- 强制横屏 -------------------------
+    static func setScreenHorizontal() {
+        forceOrientation(UIInterfaceOrientation.landscapeRight)
+    }
+    
+    // ------------------------- 强制竖屏 -------------------------
+    static func setScreenPortrait() {
+        forceOrientation(UIInterfaceOrientation.portrait)
     }
     
     // ------------------------- 获取网络连接状态 -------------------------
