@@ -60,6 +60,7 @@ struct SwiftUIWebView: UIViewRepresentable {
         self.regeisterPanelName(context: context, name: "setScreenHorizontal")
         self.regeisterPanelName(context: context, name: "setScreenPortrait")
         self.regeisterPanelName(context: context, name: "notification")
+        self.regeisterPanelName(context: context, name: "takePhoto")
 
         // 替h5端运行一些绑定代码
         injectJS(userContentController)
@@ -196,26 +197,9 @@ enum JSPanelType {
 // 定义初始化时的参数对象类
 class BaseWebViewVM: ObservableObject {
 
-    private let cameraManager = CameraManager()
+    @Published var showCamera: Bool = false
+    @Published var base64String: String?
 
-    func takePhotoButtonTapped() {
-        cameraManager.setupCamera { [weak self] base64String in
-            DispatchQueue.main.async {
-                if let base64String = base64String {
-                    print("Base64 照片数据: \(base64String)")
-                    // 可以在这里显示图片或上传服务器
-//                    let imageData = Data(base64Encoded: base64String)
-//                    let image = UIImage(data: imageData!)
-                    
-//                    self?.webView.evaluateJavaScript(
-//                        doCallbackFnToWeb(
-//                            jsStr: "writeLocalCallback('\(base64String)')"))
-                } else {
-                    print("拍照失败")
-                }
-            }
-        }
-    }
 
     // BaseWebViewVM has a published property webResource.
     // This property can be initialized through the class constructor (init method).
@@ -360,8 +344,15 @@ class BaseWebViewVM: ObservableObject {
             })
         }
         // 相机拍照
-        if fromHandler == "takephoto" {
-          
+        if fromHandler == "takePhoto" {
+            print("takephoto")
+            self.showCamera = true
+            
+            
+            
+            
+            
+            
         }
 
         return returnValue

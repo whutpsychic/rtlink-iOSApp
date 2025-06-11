@@ -11,7 +11,6 @@ struct EntryView: View {
 
     @ObservedObject var vm = BaseWebViewVM(webResource: WEB_URL)
     @State var message: String = ""
-    
 
     var body: some View {
         VStack {
@@ -48,7 +47,12 @@ struct EntryView: View {
                     },
                     message: {
                         Text(vm.panelMessage)
-                    })
+                    }
+                )
+                //
+                .sheet(isPresented: $vm.showCamera) {
+                    CameraView(base64String: $vm.base64String)
+                }
 
         }
     }
