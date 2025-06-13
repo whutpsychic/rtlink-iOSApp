@@ -10,27 +10,31 @@ import SwiftUI
 enum Route: Hashable {
     case webView
     case cameraView
+    case scannerView
 }
 
 struct EntryView: View {
 
     @State private var path = NavigationPath()  // 存储导航路径
-    @ObservedObject var vm = BaseWebViewVM(webResource: WEB_URL)
     @EnvironmentObject var appState: AppState
 
     var body: some View {
         NavigationStack(path: $path) {
             VStack {
-                MainWebView(viewModel: vm, path: $path)
+                MainWebView(path: $path)
             }
             .navigationDestination(for: Route.self) { route in
                 switch route {
                 case .webView:
-                    MainWebView(viewModel: vm, path: $path).environmentObject(
+                    MainWebView(path: $path).environmentObject(
                         appState)
                 case .cameraView:
                     CameraView(path: $path)
                         .navigationBarHidden(true).ignoresSafeArea(.all)
+                        .environmentObject(appState)
+                case .scannerView:
+                    CodeScannerView(path: $path)
+                        .ignoresSafeArea(.all)
                         .environmentObject(appState)
                 }
             }

@@ -61,6 +61,7 @@ struct SwiftUIWebView: UIViewRepresentable {
         self.regeisterPanelName(context: context, name: "setScreenPortrait")
         self.regeisterPanelName(context: context, name: "notification")
         self.regeisterPanelName(context: context, name: "takePhoto")
+        self.regeisterPanelName(context: context, name: "scan")
 
         // 替h5端运行一些绑定代码
         injectJS(userContentController)
@@ -359,10 +360,12 @@ class BaseWebViewVM: ObservableObject {
         }
         // 相机拍照
         if fromHandler == "takePhoto" {
-            print("takephoto")
             // 触发导航回调
             onNavigate?(Route.cameraView)
-
+        }
+        // 扫码
+        if fromHandler == "scan" {
+            onNavigate?(Route.scannerView)
         }
 
         return returnValue
